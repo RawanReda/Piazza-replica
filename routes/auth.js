@@ -63,10 +63,7 @@ router.post('/login', async(req, res) => {
         return res.status(400).send({message:'ERROR: Password is wrong'}) // in the form of json
     }
     const token = jsonwebtoken.sign({_id:user._id}, process.env.TOKEN_SECRET)    
-    res.send("hi")
-
-    // res.header('auth-token', token).send({'auth-token': token})
-    // console.log(req.body)
+    res.header('auth-token', token).send({'auth-token': token})
 })
 
 module.exports = router
