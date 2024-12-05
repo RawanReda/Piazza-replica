@@ -1,5 +1,6 @@
 const express = require('express')
 const router = express.Router()
+const mongoose = require('mongoose'); // Import ObjectId from mongodb package
 
 const User = require("../models/User")
 const Post = require("../models/Post")
@@ -20,6 +21,36 @@ router.get("/", verifyToken, async (req, res) => {
     }
 })
 
+// router.get("/active", verifyToken, async (req, res) => {
+//     const topic = req.query.topic ?? ""
+//     let posts = []
+//     try {
+//         if (!!topic) {
+//             posts = await Post.find({ "topic": topic }).sort({})
+//         } else {
+//             posts = await Post.find()
+//         }
+//         res.send(posts)
+//     } catch (err) {
+//         res.status(400).send({ messenger: err })
+//     }
+// })
+
+// router.get("/", verifyToken, async (req, res) => {
+//     const topic = req.query.topic ?? ""
+//     let posts = []
+//     try {
+//         if (!!topic) {
+//             posts = await Post.find({ "topic": topic })
+//         } else {
+//             posts = await Post.find()
+//         }
+//         res.send(posts)
+//     } catch (err) {
+//         res.status(400).send({ messenger: err })
+//     }
+// })
+
 router.post("/", verifyToken, async (req, res) => {
 
     try {
@@ -36,38 +67,52 @@ router.post("/", verifyToken, async (req, res) => {
     }
 })
 
-router.patch("/:postId", async (req, res) => {
+router.patch("/:postId", verifyToken, async (req, res) => {
 
     const interationType = req.body.interactionType
     const postId = req.params.postId
-    const posto = Post.findById(postId)
     console.log(req.body, " interactionType ", interationType, "postId ", postId)
 
     const post = await Post.findById(postId)
     // const userId = await req.user
 
-    const userId = "6742ff873a0a753a09867b5b"
-    const uo = await User.findById(userId) ///  it should fail if the user does not exist 
+    const user = await User.findById(req.user) ///  it should fail if the user does not exist 
 
-
-    console.log("uo ",uo, req.user)
-    let set = {
-    }
+    let set = {}
     if (interationType == "LIKE") {
         let updatedLikes = post.likes ?? []
-        updatedLikes.push(uo)
-        set.likes = updatedLikes
+
+        var isInArray = updatedLikes.some(function (postlike) {
+            return postlike.equals(user._id);
+        });
+
+        if(isInArray){
+            set = {$inc: { likesCount: -1 },
+            $pull: { likes: user._id}}
+        } else {
+            set = {$inc: { likesCount: -1 },
+            $push: {  likes: user._id}}
+        }
         
     } else if (interationType == "DISLIKE") {
-        let updatedDislikes = post.dislikes ?? []
-        updatedDislikes.push(uo)
-        set = {
-            dislikes: updatedDislikes
+        let updatedDislikes = post.likes ?? []
+
+        var isInArray = updatedDislikes.some(function (postlike) {
+            return postlike.equals(user._id);
+        });
+
+        if(isInArray){
+            set = {$inc: { dislikesCount: -1 },
+            $pull: { dislikes: user._id}}
+        } else {
+            set = {$inc: { dislikesCount: -1 },
+            $push: {  dislikes: user._id}}
         }
+
     } else if (interationType == "COMMENT") {
         let updatedComments = post.comments ?? []
         const comment = req.body.comment
-        updatedComments.push({ comment: comment, user: uo })
+        updatedComments.push({ comment: comment, user: user })
         set.comments= updatedComments
 
     }
@@ -78,7 +123,7 @@ router.patch("/:postId", async (req, res) => {
 
     const updatePostById = await Post.updateOne(
         { _id: postId },
-        { $set: set }
+        set
     )
     res.send(updatePostById)
     console.log("post id updated ", updatePostById)

@@ -41,12 +41,18 @@ const postSchema = mongoose.Schema({
             ref: 'User',
         }
     ],
+    likesCount: { type: Number, 
+        default: 0 
+    },
     dislikes: [
         {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
         }
     ],
+    dislikesCount: { type: Number, 
+        default: 0 
+    },
     comments: [
         {
             comment: String,
