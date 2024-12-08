@@ -1,16 +1,23 @@
 const mongoose = require('mongoose')
-//TODO: add title
+
 const postSchema = mongoose.Schema({
-    body: { // what is the largest possible?
+    body: {
         type: String,
         require: true,
         min: 6,
         max: 1024
     },
+    title :{
+        type: String
+    },
     topic: {
         type: String,
         require: true,
         enum: ['Politics', 'Health', 'Tech', 'Sport']
+    },
+    createdBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
     },
     created: {
         type: Date,
@@ -23,26 +30,15 @@ const postSchema = mongoose.Schema({
             return date.setUTCFullYear(date.getFullYear() + 1)
         }
     },
-    status: { // only expired or live ( categorised based on condition?)
-        type: String,
-        enum: ['Live', 'Expired'],
-        default: function () {
-            if (this.expired <= this.created) {
-                return 'Expired'
-            } else {
-                return 'Live'
-            }
-        }
-
-    },
     likes: [
         {
             type: mongoose.Schema.Types.ObjectId,
             ref: 'User',
         }
     ],
-    likesCount: { type: Number, 
-        default: 0 
+    likesCount: {
+        type: Number,
+        default: 0
     },
     dislikes: [
         {
@@ -50,8 +46,9 @@ const postSchema = mongoose.Schema({
             ref: 'User',
         }
     ],
-    dislikesCount: { type: Number, 
-        default: 0 
+    dislikesCount: {
+        type: Number,
+        default: 0
     },
     comments: [
         {
@@ -61,7 +58,15 @@ const postSchema = mongoose.Schema({
                 ref: 'User'
             }
         }
-    ],
-})
+    ]
+},
+    {
+        toObject: { virtuals: true },
+        toJSON: { virtuals: true }
+    }
+)
+
+postSchema.virtual('status')
+    .get(function () { return (this.expired > new Date()) ? "Live" : "Expired"; });
 
 module.exports = mongoose.model('posts', postSchema)
