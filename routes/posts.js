@@ -30,20 +30,16 @@ router.get("/sort", verifyToken, async (req, res) => {
 
     let posts = []
     try {
-        if (!!topic) {
-            posts = await Post.aggregate([
-                { $match: { $and: [{ expired: { $gt: new Date() } }, { topic: topic }] } }, // what happens i topic is null
-                { $addFields: { "likesDislikesCount": { $sum: ["$likesCount", "$dislikesCount"] } } },
-                { $sort: { "likesDislikesCount": -1 } }
-            ])
-        } else {
-            posts = await Post.aggregate([
-                { $match: { $and: [{ expired: { $gt: new Date() } }] } },
-                { $addFields: { "likesDislikesCount": { $sum: ["$likesCount", "$dislikesCount"] } } },
-                { $sort: { "likesDislikesCount": -1 } }
-            ])        }
+
+        posts = await Post.aggregate([
+            { $match: { $and: [{ expired: { $gt: new Date() } }, { topic: topic }] } },
+            { $addFields: { "likesDislikesCount": { $sum: ["$likesCount", "$dislikesCount"] } } },
+            { $sort: { "likesDislikesCount": -1 } }
+        ])
+
         return res.send(posts)
-    } catch (err) {
+    }
+    catch (err) {
         return res.status(400).send({ messenger: err })
     }
 })
