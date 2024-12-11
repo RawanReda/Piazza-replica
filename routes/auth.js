@@ -33,7 +33,7 @@ router.post('/register', async (req, res) => {
         password: hashedPassword
     })
 
-    // code to insert data
+    // code to insert user
     try {
         const savedUser = await user.save()
         res.send(savedUser)

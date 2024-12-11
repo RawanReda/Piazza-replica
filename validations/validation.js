@@ -17,7 +17,7 @@ const loginValidation = (data) => {
     return schemaValidation.validate(data)
 }
 
-// TODO: add schema validation for post
+// schema validation for post
 const postValidation = (data) => {
     const schemaValidation = joi.object({
         body: joi.string().required(),

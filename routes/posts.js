@@ -32,13 +32,16 @@ router.get("/sort", verifyToken, async (req, res) => {
     try {
         if (!!topic) {
             posts = await Post.aggregate([
-                { $match: { $and: [{ expired: { $gt: new Date() } }, { topic: topic }] } },
+                { $match: { $and: [{ expired: { $gt: new Date() } }, { topic: topic }] } }, // what happens i topic is null
                 { $addFields: { "likesDislikesCount": { $sum: ["$likesCount", "$dislikesCount"] } } },
                 { $sort: { "likesDislikesCount": -1 } }
             ])
         } else {
-            posts = await Post.find({ expired: { $gt: Date.now() } })
-        }
+            posts = await Post.aggregate([
+                { $match: { $and: [{ expired: { $gt: new Date() } }] } },
+                { $addFields: { "likesDislikesCount": { $sum: ["$likesCount", "$dislikesCount"] } } },
+                { $sort: { "likesDislikesCount": -1 } }
+            ])        }
         return res.send(posts)
     } catch (err) {
         return res.status(400).send({ messenger: err })
@@ -93,7 +96,7 @@ router.patch("/:postId", verifyToken, async (req, res) => {
 
     const post = await Post.findById(postId)
 
-    const user = await User.findById(req.user) ///  it should fail if the user does not exist
+    const user = await User.findById(req.user)
 
     if (post.expired < new Date()) {
         return res.status(400).send("User can not interact with an expired post.")
