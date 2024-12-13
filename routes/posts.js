@@ -14,9 +14,9 @@ router.get("/", verifyToken, async (req, res) => {
     let posts = []
     try {
         if (!!topic) {
-            posts = await Post.find({ $and: [{ expired: { $gt: Date.now() } }, { topic: topic }] })
+            posts = await Post.find({ topic: topic })
         } else {
-            posts = await Post.find({ expired: { $gt: Date.now() } })
+            posts = await Post.find()
         }
         return res.send(posts)
     } catch (err) {

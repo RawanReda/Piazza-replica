@@ -21,7 +21,9 @@ const loginValidation = (data) => {
 const postValidation = (data) => {
     const schemaValidation = joi.object({
         body: joi.string().required(),
-        topic:  joi.string().required()
+        topic:  joi.string().required(),
+        created: joi.date(),
+        expired: joi.date()
     })
     return schemaValidation.validate(data)
 }
